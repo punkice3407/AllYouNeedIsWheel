@@ -16,3 +16,5 @@ flask-cors>=4.0.0
 gunicorn>=21.2.0
 waitress>=2.1.2  # Windows-compatible WSGI server alternative to gunicorn
 werkzeug>=3.0.1 
+snaptrade-python-sdk>=1.0.0 
+requests>=2.0.0

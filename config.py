@@ -19,6 +19,7 @@ class Config:
         """
         # Initialize with default values
         self.config = default_config.copy() if default_config else {}
+        self.config_file_path = None # Store the path
         
         # If config_file is not provided, check environment variable
         if config_file is None:
@@ -29,9 +30,11 @@ class Config:
         
         # Load from file if provided
         if config_file and os.path.exists(config_file):
+            self.config_file_path = config_file # Save the path
             self.load_from_file(config_file)
             logger.info(f"Configuration loaded from: {config_file}")
-            logger.debug(f"Connection port: {self.get('port')}")
+        else:
+            logger.warning(f"Config file not found: {config_file}")
             
     def load_from_file(self, config_file):
         """
@@ -49,6 +52,7 @@ class Config:
                 
             # Update our configuration with values from the file
             self.config.update(file_config)
+            self.config_file_path = config_file # Store the path
             return True
         except Exception as e:
             logger.error(f"Error loading configuration from {config_file}: {str(e)}")
@@ -69,7 +73,7 @@ class Config:
         
     def set(self, key, value):
         """
-        Set a configuration value
+        Set a configuration value in memory
         
         Args:
             key (str): Configuration key
@@ -86,20 +90,22 @@ class Config:
         """
         return self.config.copy()
         
-    def save_to_file(self, config_file):
+    def save_to_file(self):
         """
-        Save the configuration to a JSON file
-        
-        Args:
-            config_file (str): Path to a JSON configuration file
+        Save the current configuration back to the file it was loaded from
             
         Returns:
             bool: True if successful, False otherwise
         """
+        if not self.config_file_path:
+            logger.error("Cannot save config: config_file_path is not set.")
+            return False
+            
         try:
-            with open(config_file, 'w') as f:
+            with open(self.config_file_path, 'w') as f:
                 json.dump(self.config, f, indent=4)
+            logger.info(f"Successfully saved config to {self.config_file_path}")
             return True
         except Exception as e:
-            logger.error(f"Error saving configuration to {config_file}: {str(e)}")
-            return False 
+            logger.error(f"Error saving configuration to {self.config_file_path}: {str(e)}")
+            return False

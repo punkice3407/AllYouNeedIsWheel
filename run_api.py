@@ -117,7 +117,7 @@ def main():
             logger.info("Using paper trading configuration")
         
         # Get port from environment variable or use default (changed from 5000 to 8000)
-        port = os.environ.get('PORT', '8000')
+        port = os.environ.get('PORT', '6001')
         workers = os.environ.get('WORKERS', '4')
         
         # Check if port is available

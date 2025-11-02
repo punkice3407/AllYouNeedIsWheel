@@ -137,10 +137,8 @@ document.addEventListener('DOMContentLoaded', function() {
     popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
-});
 
-// Set the current year in the footer
-document.addEventListener('DOMContentLoaded', function() {
+    // Set the current year in the footer
     const currentYearElement = document.getElementById('current-year');
     if (currentYearElement) {
         currentYearElement.textContent = new Date().getFullYear();
@@ -152,6 +150,80 @@ document.addEventListener('DOMContentLoaded', function() {
         const contentContainer = document.createElement('div');
         contentContainer.className = 'content-container';
         mainContainer.prepend(contentContainer);
+    }
+
+    // Add listener for the SnapTrade Connect button
+    const connectBtn = document.getElementById('connect-broker-btn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            connectBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            connectBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/snaptrade/connect-broker-url');
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Failed to get login URL from server.');
+                }
+                
+                const data = await response.json();
+                
+                if (data.login_url) {
+                    // Success! Redirect the user to the SnapTrade login page
+                    window.location.href = data.login_url;
+                } else {
+                    throw new Error(data.error || 'No login_url received.');
+                }
+            } catch (err) {
+                console.error('Error getting SnapTrade login URL:', err);
+                alert('Could not open the broker connection page: ' + err.message);
+                connectBtn.innerHTML = '<i class="bi bi-bank"></i> Connect Broker';
+                connectBtn.disabled = false;
+            }
+        });
+    }
+
+    // Add listener for the SnapTrade Disconnect button
+    const disconnectBtn = document.getElementById('disconnect-broker-btn');
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // Use a custom modal or simple confirm
+            if (!confirm('Are you sure you want to disconnect all brokerage accounts? This will remove all connections.')) {
+                return;
+            }
+
+            disconnectBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Disconnecting...';
+            disconnectBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/snaptrade/disconnect-broker', {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Failed to disconnect.');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Successfully disconnected all accounts. You can now connect a new one.');
+                    // Reload the page to clear any cached portfolio data
+                    window.location.reload();
+                } else {
+                    throw new Error(data.error || 'An unknown error occurred.');
+                }
+            } catch (err) {
+                console.error('Error disconnecting from SnapTrade:', err);
+                alert('Could not disconnect accounts: ' + err.message);
+                disconnectBtn.innerHTML = '<i class="bi bi-x-circle"></i> Disconnect';
+                disconnectBtn.disabled = false;
+            }
+        });
     }
 });
 
@@ -259,3 +331,4 @@ if (!window.fetch) {
         });
     };
 } 
+

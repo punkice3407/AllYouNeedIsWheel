@@ -9,7 +9,8 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from api import create_app
 from core.logging_config import get_logger
 from db.database import OptionsDatabase
-from core.connection import IBConnection, suppress_ib_logs
+# We are no longer importing IBConnection here, it's handled by the services
+# from core.connection import IBConnection, suppress_ib_logs
 
 # Configure logging
 logger = get_logger('autotrader.app', 'api')
@@ -31,31 +32,38 @@ def create_application():
                 connection_config = json.load(f)
                 logger.info(f"Loaded connection configuration from {connection_config_path}")
                 # Initialize the database
-                db_path = connection_config['db_path']
-                logger.info(f"Initializing database at {db_path}")
-                options_db = OptionsDatabase(db_path)
-                app.config['database'] = options_db
+                db_path = connection_config.get('db_path') # Use .get() for safety
+                if db_path:
+                    logger.info(f"Initializing database at {db_path}")
+                    options_db = OptionsDatabase(db_path)
+                    app.config['database'] = options_db
+                else:
+                    logger.warning("db_path not found in config, database not initialized.")
         except Exception as e:
             logger.error(f"Error loading connection configuration: {str(e)}")
-            # Use default values
+            # Use default values (less relevant for SnapTrade but good practice)
             connection_config = {
-                "host": "127.0.0.1",
-                "port": 7497,  # Use 7496 for TWS, 7497 for IB Gateway
-                "client_id": 1,
-                "readonly": True  # Default to readonly for safety
+                "snaptrade_client_id": "YOUR_CLIENT_ID",
+                "snaptrade_consumer_key": "YOUR_CONSUMER_KEY"
             }
     else:
         logger.warning(f"Connection configuration file {connection_config_path} not found, using defaults")
         # Use default values
         connection_config = {
-            "host": "127.0.0.1",
-            "port": 7497,
-            "client_id": 1,
-            "readonly": True
+            "snaptrade_client_id": "YOUR_CLIENT_ID",
+            "snaptrade_consumer_key": "YOUR_CONSUMER_KEY"
         }
     # Store connection config in the app
     app.config['connection_config'] = connection_config
-    logger.info(f"Using connection config: {connection_config}")
+    logger.info(f"Using connection config (keys partially masked)")
+    
+    # Import and register the new SnapTrade blueprint
+    try:
+        from api.routes import snaptrade
+        app.register_blueprint(snaptrade.bp)
+        logger.info("Registered SnapTrade blueprint")
+    except ImportError as e:
+        logger.warning(f"Could not import or register SnapTrade blueprint: {e}")
     
     return app
 
@@ -125,4 +133,4 @@ if __name__ == '__main__':
     
     # Run the application
     logger.info(f"Starting Flask development server on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=True) 
+    app.run(host='0.0.0.0', port=port, debug=True)

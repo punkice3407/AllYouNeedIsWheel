@@ -15,13 +15,10 @@ from .utils import (
 )
 
 # Import connection classes
-from .connection import IBConnection, Option
+from .connection import SnapTradeConnection
 
 __all__ = [
-    # Connection
-    'IBConnection',
-    'Option',
-    
+    # Connection    
     # Utils
     'rotate_logs',
     'rotate_reports',

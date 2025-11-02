@@ -1,9 +1,12 @@
 {
-    "host": "127.0.0.1",
-    "port": 7496,
-    "client_id": 1,
-    "readonly": false,
-    "account_id": "YOUR_ACCOUNT_ID",
-    "db_path": "options.db",
-    "comment": "Port 7496 for TWS, 7497 for IB Gateway. Set readonly to true for safety during testing."
-} 
+    "comment": "SnapTrade API Credentials",
+    "snaptrade_client_id": "CLIENT_ID",
+    "snaptrade_consumer_key": "CONSUMER_KEY",
+    
+    "comment_user": "These are the credentials for a specific user you've registered",
+    "snaptrade_user_id": "mphinance",
+    "snaptrade_user_secret": "SECRET",
+    "comment_redirect": "The base URL of YOUR app (what you type in the browser)",
+    "app_base_url": "http://localhost:6001",    
+    "db_path": "options.db"
+}
